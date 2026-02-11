@@ -1,0 +1,1 @@
+#define fonttex 0

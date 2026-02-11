@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<app version="1">
+    <name>memrrtiks, suashem</name>
+    <coder>The reTerry Project</coder>
+    <version>1.02</version>
+    <release_date>20260206201300</release_date>
+    <short_description>by Terry Cavanagh</short_description>
+    <long_description>Everybody's favourite schizophrenia simulator is now on the Wii!
+
+Play with all the features you know and love from the Flash version, including:
+        - bright lights
+        - a "soundtrack" (generous naming)
+        - funky backgrounds
+        - seizures
+
+Have fun!
+UPDATE v1.01 10/2: attempt fix for main menu dithering, remove unused sprite, use SYS_MainLoop
+UPDATE v1.02 10/2: fix main menu dithering (for REAL this time)
+    </long_description>
+</app>
