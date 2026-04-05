@@ -1,1 +1,0 @@
-#define spritesimg 0

@@ -1,9 +1,0 @@
-#define image0 0
-#define image1 1
-#define image2 2
-#define image3 3
-#define image4 4
-#define image5 5
-#define image6 6
-#define image7 7
-#define pix 8
