@@ -33,7 +33,7 @@ int main( int argc, char **argv ){
 	Mtx GXmodelView2D;
 	void *gp_fifo = NULL;
 
-	GXColor background = {0xff, 0xff, 0xff, 0xff};
+	GXColor background = {0, 0, 0, 0xff};
 
 	VIDEO_Init();
 
@@ -104,14 +104,16 @@ int main( int argc, char **argv ){
 	guOrtho(perspective,0,479,0,639,0,300);
 	GX_LoadProjectionMtx(perspective, GX_ORTHOGRAPHIC);
 
-	WPAD_Init();
-
+	WPAD_Init(); // wii
+	PAD_Init();  // gamecube
 
 	while(SYS_MainLoop()) {
 
-		WPAD_ScanPads();
+		WPAD_ScanPads(); // wii
+		PAD_ScanPads();  // gamecube
 
-		if (WPAD_ButtonsDown(0) & WPAD_BUTTON_HOME) exit(0);
+		if ((WPAD_ButtonsDown(0) & WPAD_BUTTON_HOME ) ||
+		    ( PAD_ButtonsDown(0) &  PAD_TRIGGER_Z)) exit(0);
 
 		GX_SetViewport(0,0,gfx::rmode->fbWidth,gfx::rmode->efbHeight,0,1);
 		GX_InvVtxCache();

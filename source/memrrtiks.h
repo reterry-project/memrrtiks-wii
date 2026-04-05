@@ -17,6 +17,9 @@
 #define CLICKTOSTART 2
 #define FOCUSMODE    3
 
+#define MWIDTH       285
+#define MHEIGHT      220
+
 // useless??
 //#define TARGET_FPS 60
 
@@ -35,6 +38,21 @@ private:
 
 
 public:
+    int konamiNum = 0;
+    u32 konamis[11] = {
+        PAD_BUTTON_UP,
+        PAD_BUTTON_UP,
+        PAD_BUTTON_DOWN,
+        PAD_BUTTON_DOWN,
+        PAD_BUTTON_LEFT,
+        PAD_BUTTON_RIGHT,
+        PAD_BUTTON_LEFT,
+        PAD_BUTTON_RIGHT,
+        PAD_BUTTON_B,
+        PAD_BUTTON_A,
+        PAD_BUTTON_START
+    };
+
     int i, j, k;
     unsigned int pi, pj;
 
@@ -59,6 +77,7 @@ public:
 
     void gameinput();
     void titleinput();
+    void konami();
     void input();
 
     void gamerender(Mtx GXmodelView2D);

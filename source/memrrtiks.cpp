@@ -187,7 +187,6 @@ void memrrtiks::gamerender(Mtx GXmodelView2D)
 dogdebug:
 
 #ifdef GDEBUG
-      font::printtext("debug build! debug features are enabled", 1, 1, 8, 0, 0, 200);
       snprintf(debugtext, 63, "ents: %d, sents: %d", (int)obj->entities.size(), (int)obj->simpleentities.size());
       font::printtext(debugtext, 1, 11, 8, 0, 0, 0);
       snprintf(debugtext, 63, "blocks: %d", (int)obj->blocks.size());
@@ -265,7 +264,8 @@ void memrrtiks::gamelogic()
 
 void memrrtiks::gameinput()
 {
-      u32 buttonsdown = WPAD_ButtonsHeld(0);
+      u32 buttonsdown   = WPAD_ButtonsHeld(0);
+      u32 buttonsdowngc =  PAD_ButtonsHeld(0);
       /*i = 0;
       while(i < gfx.ntextbox)
       {
@@ -304,13 +304,20 @@ void memrrtiks::gameinput()
             {
                   if(game->hascontrol)
                   {
-                        game->jumpheld = buttonsdown & WPAD_BUTTON_A;
+                        game->jumpheld = (buttonsdown   & WPAD_BUTTON_A) ||
+                                         (buttonsdowngc &  PAD_BUTTON_A);
 
                         if(game->jumppressed > 0)
                         {
                               game->jumppressed--;
                         }
-                        if(buttonsdown & WPAD_BUTTON_LEFT)
+
+
+                        // movement
+
+                        s8 stick[2] = { PAD_StickX(0), PAD_StickY(0) };
+
+                        if((buttonsdown & WPAD_BUTTON_LEFT) || (buttonsdowngc & PAD_BUTTON_LEFT)        || (stick[0] < 0))
                         {
                               if(obj->entities[i].xp > 0)
                               {
@@ -325,9 +332,9 @@ void memrrtiks::gameinput()
                                     obj->entities[i].dir = 0;
                               }
                         }
-                        else if(buttonsdown & WPAD_BUTTON_RIGHT)
+                        else if((buttonsdown & WPAD_BUTTON_RIGHT) || (buttonsdowngc & PAD_BUTTON_RIGHT) || (stick[0] > 0))
                         {
-                              if(obj->entities[i].xp < 285)
+                              if(obj->entities[i].xp < MWIDTH)
                               {
                                     obj->entities[i].vx = 6;
                               }
@@ -344,7 +351,8 @@ void memrrtiks::gameinput()
                         {
                               obj->entities[i].vx = 0;
                         }
-                        if(buttonsdown & WPAD_BUTTON_UP)
+
+                        if((buttonsdown & WPAD_BUTTON_UP) || (buttonsdowngc & PAD_BUTTON_UP)            || (stick[1] > 0))
                         {
                               if(obj->entities[i].yp > 0)
                               {
@@ -359,9 +367,9 @@ void memrrtiks::gameinput()
                                     obj->entities[i].dir = 2;
                               }
                         }
-                        else if(buttonsdown & WPAD_BUTTON_DOWN)
+                        else if((buttonsdown & WPAD_BUTTON_DOWN) || (buttonsdowngc & PAD_BUTTON_DOWN)   || (stick[1] < 0))
                         {
-                              if(obj->entities[i].yp < 220)
+                              if(obj->entities[i].yp < MHEIGHT)
                               {
                                     obj->entities[i].vy = 6;
                               }
@@ -378,11 +386,23 @@ void memrrtiks::gameinput()
                         {
                               obj->entities[i].vy = 0;
                         }
+
+                        /*if(abs(stick[0]) > 64 || abs(stick[1]) > 64) { // only override if there is activity on the stick
+                              obj->entities[i].vx = stick[0] < 0 ? (obj->entities[i].yp > 0 ? -6 : 0) : (obj->entities[i].yp < MWIDTH  ? 6 : 0);
+                              obj->entities[i].vy = stick[1] < 0 ? (obj->entities[i].yp > 0 ? -6 : 0) : (obj->entities[i].yp < MHEIGHT ? 6 : 0);
+                              if(!game->jumpheld) {
+                                    obj->entities[i].dir = (stick[0] < 0 ? 0 : 1);
+                                    obj->entities[i].dir = (stick[1] < 0 ? 2 : 3);
+                              }
+                        }*/
+
+                        // others
                         if(!game->jumpheld)
                         {
                               gfx::funkyroom = obj->entities[i].dir;
                               mus::play(obj->entities[i].dir + 1);
                         }
+
                         if(game->shootdelay <= 0)
                         {
                               switch(obj->entities[i].dir)
@@ -424,12 +444,28 @@ void memrrtiks::titleinput()
       {
             game->jumpheld = false;
       }
-      if(((WPAD_ButtonsDown(0) & WPAD_BUTTON_A) || (WPAD_ButtonsDown(0) & WPAD_BUTTON_MINUS) || (WPAD_ButtonsDown(0) & WPAD_BUTTON_PLUS)) && !game->jumpheld)
+      if((((WPAD_ButtonsDown(0) & WPAD_BUTTON_A) || (WPAD_ButtonsDown(0) & WPAD_BUTTON_MINUS) || (WPAD_ButtonsDown(0) & WPAD_BUTTON_PLUS)) && !game->jumpheld) || 
+          ((PAD_ButtonsUp(0) & PAD_BUTTON_START) || (PAD_ButtonsUp(0) & PAD_BUTTON_A))
+      )
       {
+            game->jumpheld = false;
             game->reset(obj);
             game->gamestate = GAMEMODE;
             game->start(obj);
             game->score = 0;
+      }
+
+}
+
+void memrrtiks::konami() {
+      u32 buttonsdowngc =  PAD_ButtonsUp(3);
+
+      if(konamiNum < 11) {
+            if(buttonsdowngc & konamis[konamiNum]) konamiNum++;
+            else if(buttonsdowngc != 0) konamiNum = 0;
+      } else {
+            game->gamestate = CLICKTOSTART;
+            konamiNum = 0;
       }
 }
 
@@ -439,16 +475,18 @@ void memrrtiks::input()
 
       game->mx = data->ir.x / 2;
       game->my = data->ir.y / 2;
+
       switch(game->gamestate)
       {
             case TITLEMODE:
+                  konami();
                   titleinput();
                   break;
             case GAMEMODE:
                   gameinput();
                   break;
             case CLICKTOSTART:
-                  if((WPAD_ButtonsDown(0) & WPAD_BUTTON_A))
+                  if((WPAD_ButtonsDown(0) & WPAD_BUTTON_A) || (PAD_ButtonsDown(0) & PAD_BUTTON_A))
                         game->gamestate = TITLEMODE;
             break;
       }
@@ -509,11 +547,20 @@ SoundMixer.soundTransform = new SoundTransform(1);
 
 void memrrtiks::titlerender()
 {
+#ifdef GDEBUG
+      char msg[128] = {0};
+#endif
+
       gfx::funkybackground(4);
       gfx::bigprint(5,80,"memrrtiks, suashem",0,0,0,true);
       gfx::bigprint(5,180,"highscore",0,0,0,true);
       snprintf(highscorestr, 31, "%d", game->highscore);
       gfx::bigprint(-1,200,highscorestr,0,0,0,true,5);
+
+#ifdef GDEBUG
+      snprintf(msg, 127, "konami nums: %d", konamiNum);
+      font::printtext(msg, 1, 11, 8, 0, 0, 200);
+#endif
 }
 
 void memrrtiks::render(Mtx GXmodelView2D)
@@ -531,4 +578,8 @@ void memrrtiks::render(Mtx GXmodelView2D)
                   //gfx::normalrender();
                   break;
       }
+
+#ifdef GDEBUG
+      font::printtext("debug build! debug features are enabled", 1, 1, 8, 0, 0, 200);
+#endif
 }
